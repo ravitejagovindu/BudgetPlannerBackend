@@ -64,6 +64,10 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
@@ -100,6 +104,13 @@
                     <from>
                         <image>eclipse-temurin:21-jre</image>
                     </from>
+                    <to>
+                        <image>978080005769.dkr.ecr.ap-south-1.amazonaws.com/budget-planner-hub:latest</image>
+                    </to>
+                    <auth>
+                        <username>AWS</username>
+                        <password>${env.AWS_ECR_PASSWORD}</password>
+                    </auth>
                 </configuration>
             </plugin>
         </plugins>
