@@ -105,12 +105,12 @@
                         <image>eclipse-temurin:21-jre</image>
                     </from>
                     <to>
-                        <image>978080005769.dkr.ecr.ap-south-1.amazonaws.com/budget-planner-hub:latest</image>
+                        <image>budgetplannerregistry.azurecr.io/budget-planner-image:latest</image>
+                        <auth>
+                            <username>budgetplannerregistry</username>
+                            <password>imcUoJxT9ml6BVUv+XOHKaiaB53WPLXbynlRhKammo+ACRAnPlxr</password>
+                        </auth>
                     </to>
-                    <auth>
-                        <username>AWS</username>
-                        <password>${env.AWS_ECR_PASSWORD}</password>
-                    </auth>
                 </configuration>
             </plugin>
         </plugins>

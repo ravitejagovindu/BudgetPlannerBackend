@@ -56,4 +56,7 @@ public class BudgetService {
     }
 
 
+    public void refresh() {
+        isNewBudgetTypeAdded=true;
+    }
 }

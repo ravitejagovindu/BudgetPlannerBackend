@@ -33,6 +33,13 @@ public class PlannerController {
         return new ResponseEntity<>(body, HttpStatus.CREATED);
     }
 
+    @PostMapping("/subcategories")
+    public ResponseEntity<ApiResponse<String>> createSubCategories(@RequestBody PlannerDTO planner){
+        plannerService.createSubCategories(planner);
+        ApiResponse<String> body = new ApiResponse<>("Success",null,"Created");
+        return new ResponseEntity<>(body, HttpStatus.CREATED);
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse> updateProjection(@PathVariable int id, @RequestBody PlannerDTO planner){
         plannerService.updateProjection(id,planner);

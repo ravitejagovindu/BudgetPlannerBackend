@@ -24,4 +24,11 @@ public class BudgetController {
         return ResponseEntity.ok(body);
     }
 
+    @GetMapping("/refresh")
+    public ResponseEntity<ApiResponse<String>> refreshAllBudgetTypes(){
+        budgetService.refresh();
+        ApiResponse<String> body = new ApiResponse<>("Success",null,"Refreshed");
+        return ResponseEntity.ok(body);
+    }
+
 }

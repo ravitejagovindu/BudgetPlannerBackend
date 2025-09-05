@@ -194,4 +194,20 @@ public class PlannerService {
         });
         return projectionsByType;
     }
+
+    public void createSubCategories(PlannerDTO planner) {
+
+        if (planner.getYear() > LocalDate.now().getYear() || planner.getYear() < LocalDate.now().getYear() - 1)
+            throw new BadRequestException(ErrorCodes.INVALID_YEAR);
+
+        BudgetType budgetType =
+                budgetTypeRepository
+                        .findBudgetTypeByCode(planner.getType().getCode())
+                        .orElseThrow(() -> new BadRequestException(ErrorCodes.BAD_DATA));
+
+
+
+
+
+    }
 }
