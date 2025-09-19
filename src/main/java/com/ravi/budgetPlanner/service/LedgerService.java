@@ -9,10 +9,7 @@ import com.ravi.budgetPlanner.model.LedgerDTO;
 import com.ravi.budgetPlanner.model.PlannerDTO;
 import com.ravi.budgetPlanner.model.response.ChartExpenseResponseDTO;
 import com.ravi.budgetPlanner.model.response.ChartResponseDTO;
-import com.ravi.budgetPlanner.repository.BudgetCategoryRepository;
-import com.ravi.budgetPlanner.repository.BudgetSubCategoryRepository;
-import com.ravi.budgetPlanner.repository.BudgetTypeRepository;
-import com.ravi.budgetPlanner.repository.LedgerRepository;
+import com.ravi.budgetPlanner.repository.*;
 import com.ravi.budgetPlanner.repository.entity.*;
 import com.ravi.budgetPlanner.util.ValidatorHelper;
 import lombok.AllArgsConstructor;
@@ -38,6 +35,7 @@ public class LedgerService {
     private final BudgetTypeRepository budgetTypeRepository;
     private final BudgetCategoryRepository budgetCategoryRepository;
     private final BudgetSubCategoryRepository budgetSubCategoryRepository;
+    private final PaymentModeRepository paymentModeRepository;
     private final ValidatorHelper validator;
 
     public List<ChartResponseDTO> getLedgersForDashboard(int year, List<PlannerDTO> basePlanners, List<UpdatedPlanner> updatedPlanners) {
@@ -131,6 +129,7 @@ public class LedgerService {
                                         .category(ledger.getCategory().getCode())
                                         .subCategory(ledger.getSubCategory().getCode())
                                         .amount(ledger.getAmount())
+                                        .paidBy(ledger.getPaidBy().getCode())
                                         .build())
                 .toList();
     }
@@ -150,6 +149,9 @@ public class LedgerService {
                     budgetSubCategoryRepository
                             .findBudgetCategoryByCode(ledgerDTO.getSubCategory())
                             .orElseThrow(() -> new BadRequestException(ErrorCodes.BAD_DATA));
+            PaymentMode paidBy =
+                    paymentModeRepository.findPaymentModeByCode(ledgerDTO.getPaidBy())
+                            .orElseThrow(() -> new BadRequestException(ErrorCodes.BAD_DATA));
             Ledger ledger = Ledger.builder()
                     .month(ledgerDTO.getMonth())
                     .year(ledgerDTO.getYear())
@@ -158,6 +160,7 @@ public class LedgerService {
                     .category(category)
                     .subCategory(subcategory)
                     .amount(ledgerDTO.getAmount())
+                    .paidBy(paidBy)
                     .build();
             ledgerRepository.save(ledger);
         } catch (NumberFormatException | DateTimeException | BadRequestException bde) {
@@ -187,7 +190,10 @@ public class LedgerService {
                 budgetSubCategoryRepository
                         .findBudgetCategoryByCode(ledgerDTO.getSubCategory())
                         .orElseThrow(() -> new BadRequestException(ErrorCodes.BAD_DATA));
-        if(budgetType.getId()!=dbLedger.getType().getId() || category.getId()!=dbLedger.getCategory().getId() || subcategory.getId()!=dbLedger.getSubCategory().getId()){
+        PaymentMode paidBy =
+                paymentModeRepository.findPaymentModeByCode(ledgerDTO.getPaidBy())
+                        .orElseThrow(() -> new BadRequestException(ErrorCodes.BAD_DATA));
+        if (budgetType.getId() != dbLedger.getType().getId() || category.getId() != dbLedger.getCategory().getId() || subcategory.getId() != dbLedger.getSubCategory().getId()) {
             throw new BadRequestException(ErrorCodes.BAD_DATA);
         }
 
@@ -196,6 +202,7 @@ public class LedgerService {
         dbLedger.setType(budgetType);
         dbLedger.setSubCategory(subcategory);
         dbLedger.setAmount(ledgerDTO.getAmount());
+        dbLedger.setPaidBy(paidBy);
         ledgerRepository.save(dbLedger);
     }
 

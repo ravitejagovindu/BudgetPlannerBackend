@@ -32,5 +32,8 @@ public class Ledger {
     @JoinColumn(name = "sub_category_id")
     private BudgetSubCategories subCategory;
     private int amount;
+    @ManyToOne
+    @JoinColumn(name = "payment_mode_id")
+    private PaymentMode paidBy;
 
 }
