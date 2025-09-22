@@ -3,7 +3,10 @@ package com.ravi.budgetPlanner.service;
 import com.ravi.budgetPlanner.model.BudgetTypesDTO;
 import com.ravi.budgetPlanner.model.ENUMs.BudgetTypes;
 import com.ravi.budgetPlanner.model.response.BudgetTypesResponse;
+import com.ravi.budgetPlanner.model.response.PaymentModesResponse;
 import com.ravi.budgetPlanner.repository.BudgetRepository;
+import com.ravi.budgetPlanner.repository.PaymentModeRepository;
+import com.ravi.budgetPlanner.repository.entity.PaymentMode;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +24,7 @@ import java.util.stream.Collectors;
 public class BudgetService {
 
     private final BudgetRepository budgetRepository;
+    private final PaymentModeRepository paymentModeRepository;
 
     private List<BudgetTypesResponse> allBudgetTypes;
     private boolean isNewBudgetTypeAdded;
@@ -58,5 +62,11 @@ public class BudgetService {
 
     public void refresh() {
         isNewBudgetTypeAdded=true;
+    }
+
+    public PaymentModesResponse getAllPaymentModes() {
+        List<PaymentMode> paymentModes = paymentModeRepository.findAll();
+        List<String> modes = paymentModes.stream().map(PaymentMode::getCode).toList();
+        return PaymentModesResponse.builder().modes(modes).build();
     }
 }
