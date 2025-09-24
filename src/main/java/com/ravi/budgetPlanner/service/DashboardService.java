@@ -1,14 +1,9 @@
 package com.ravi.budgetPlanner.service;
 
-import com.ravi.budgetPlanner.exception.BadRequestException;
-import com.ravi.budgetPlanner.exception.BudgetException;
 import com.ravi.budgetPlanner.model.ENUMs.BudgetTypes;
-import com.ravi.budgetPlanner.model.ENUMs.ErrorCodes;
+import com.ravi.budgetPlanner.model.ENUMs.Accounts;
 import com.ravi.budgetPlanner.model.PlannerDTO;
-import com.ravi.budgetPlanner.model.response.ChartExpenseResponseDTO;
-import com.ravi.budgetPlanner.model.response.ChartResponseDTO;
-import com.ravi.budgetPlanner.model.response.ProjectionsByType;
-import com.ravi.budgetPlanner.model.response.ProjectionsResponseDTO;
+import com.ravi.budgetPlanner.model.response.*;
 import com.ravi.budgetPlanner.repository.entity.UpdatedPlanner;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -81,5 +76,10 @@ public class DashboardService {
                 .balanceDifference(balanceProjected-balanceActual)
                 .projectionsByType(projections)
                 .build();
+    }
+
+
+    public List<IndividualResponseDTO> getIndividualBalances(int year, int month) {
+        return ledgerService.getIndividualBalances(year,month);
     }
 }

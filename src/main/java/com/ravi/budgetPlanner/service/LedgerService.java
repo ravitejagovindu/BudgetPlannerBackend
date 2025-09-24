@@ -5,10 +5,12 @@ import com.ravi.budgetPlanner.exception.BudgetException;
 import com.ravi.budgetPlanner.exception.DataNotFoundException;
 import com.ravi.budgetPlanner.model.ENUMs.BudgetTypes;
 import com.ravi.budgetPlanner.model.ENUMs.ErrorCodes;
+import com.ravi.budgetPlanner.model.ENUMs.Accounts;
 import com.ravi.budgetPlanner.model.LedgerDTO;
 import com.ravi.budgetPlanner.model.PlannerDTO;
 import com.ravi.budgetPlanner.model.response.ChartExpenseResponseDTO;
 import com.ravi.budgetPlanner.model.response.ChartResponseDTO;
+import com.ravi.budgetPlanner.model.response.IndividualResponseDTO;
 import com.ravi.budgetPlanner.repository.*;
 import com.ravi.budgetPlanner.repository.entity.*;
 import com.ravi.budgetPlanner.util.ValidatorHelper;
@@ -112,6 +114,37 @@ public class LedgerService {
             actualsByType.put(type, totalAmount);
         });
         return actualsByType;
+    }
+
+    public List<IndividualResponseDTO> getIndividualBalances(int year, int month) {
+        List<Ledger> allLedgers = ledgerRepository.findLedgerByMonthAndYear(Month.of(month).name(), year);
+        Map<Accounts, List<Ledger>> individualLedgers = allLedgers.stream().collect(Collectors.groupingBy(ledger -> Accounts.fromString(ledger.getPaidBy().getCode())));
+        List<IndividualResponseDTO> individualBalances = new ArrayList<>();
+        Map<Accounts, Integer> individualIncome = new HashMap<>();
+        Map<String, List<Ledger>> incomeLedgers = allLedgers.stream().filter(ledger -> ledger.getType().getCode().equalsIgnoreCase(BudgetTypes.INCOME.getCode())).collect(Collectors.groupingBy(ledger -> ledger.getCategory().getCode()));
+        incomeLedgers.forEach((category, ledgers) -> {
+            int totalIncome = ledgers.stream().map(Ledger::getAmount).reduce(0, Integer::sum);
+            Accounts account = Accounts.RAVI;
+            if (category.equals("Shri's Salary")) {
+                account = Accounts.SHRI;
+            }
+            individualIncome.put(account, totalIncome);
+        });
+        individualLedgers.forEach((account, ledgers) -> {
+            int spent = ledgers.stream().map(Ledger::getAmount).reduce(0, Integer::sum);
+            int income = individualIncome.get(account);
+            int balance = income - spent;
+            individualBalances.add(
+                    IndividualResponseDTO
+                            .builder()
+                            .name(account.getCode())
+                            .income(income)
+                            .spent(spent)
+                            .balance(balance)
+                            .build()
+            );
+        });
+        return individualBalances;
     }
 
     private List<LedgerDTO> transformDbToDTO(List<Ledger> ledgers) {

@@ -1,9 +1,6 @@
 package com.ravi.budgetPlanner.controller;
 
-import com.ravi.budgetPlanner.model.response.ApiResponse;
-import com.ravi.budgetPlanner.model.response.ChartExpenseResponseDTO;
-import com.ravi.budgetPlanner.model.response.ChartResponseDTO;
-import com.ravi.budgetPlanner.model.response.ProjectionsResponseDTO;
+import com.ravi.budgetPlanner.model.response.*;
 import com.ravi.budgetPlanner.service.DashboardService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -37,6 +34,13 @@ public class DashboardController {
     public ResponseEntity<ApiResponse<ProjectionsResponseDTO>> getAllProjections(@RequestParam int year, @RequestParam int month){
         ProjectionsResponseDTO data = dashboardService.getAllProjections(year,month);
         ApiResponse<ProjectionsResponseDTO> body = new ApiResponse<>("Success",null,data);
+        return ResponseEntity.ok(body);
+    }
+
+    @GetMapping("/individualBalances")
+    public ResponseEntity<ApiResponse<List<IndividualResponseDTO>>> getIndividualBalances(@RequestParam int year, @RequestParam int month){
+        List<IndividualResponseDTO> data = dashboardService.getIndividualBalances(year,month);
+        ApiResponse<List<IndividualResponseDTO>> body = new ApiResponse<>("Success",null,data);
         return ResponseEntity.ok(body);
     }
 

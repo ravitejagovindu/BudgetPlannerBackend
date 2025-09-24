@@ -96,6 +96,23 @@
                     </excludes>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>com.google.cloud.tools</groupId>
+                <artifactId>jib-maven-plugin</artifactId>
+                <version>3.4.1</version>
+                <configuration>
+                    <from>
+                        <image>eclipse-temurin:21-jre</image>
+                    </from>
+                    <to>
+                        <image>budgetplannermonthly.azurecr.io/budget-planner-image:latest</image>
+                        <auth>
+                            <username>budgetPlannerMonthly</username>
+                            <password>5K24kOEHD5RwY2VOH+MHvt24Ob7LWnM+ztF+nKyXne+ACRB229ku</password>
+                        </auth>
+                    </to>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
