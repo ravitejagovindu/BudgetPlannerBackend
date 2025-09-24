@@ -118,7 +118,7 @@ public class LedgerService {
 
     public List<IndividualResponseDTO> getIndividualBalances(int year, int month) {
         List<Ledger> allLedgers = ledgerRepository.findLedgerByMonthAndYear(Month.of(month).name(), year);
-        Map<Accounts, List<Ledger>> individualLedgers = allLedgers.stream().collect(Collectors.groupingBy(ledger -> Accounts.fromString(ledger.getPaidBy().getCode())));
+        Map<Accounts, List<Ledger>> nonIncomeIndividualLedgers = allLedgers.stream().filter(ledger -> !ledger.getType().getCode().equalsIgnoreCase(BudgetTypes.INCOME.getCode())).collect(Collectors.groupingBy(ledger -> Accounts.fromString(ledger.getPaidBy().getCode())));
         List<IndividualResponseDTO> individualBalances = new ArrayList<>();
         Map<Accounts, Integer> individualIncome = new HashMap<>();
         Map<String, List<Ledger>> incomeLedgers = allLedgers.stream().filter(ledger -> ledger.getType().getCode().equalsIgnoreCase(BudgetTypes.INCOME.getCode())).collect(Collectors.groupingBy(ledger -> ledger.getCategory().getCode()));
@@ -130,7 +130,7 @@ public class LedgerService {
             }
             individualIncome.put(account, totalIncome);
         });
-        individualLedgers.forEach((account, ledgers) -> {
+        nonIncomeIndividualLedgers.forEach((account, ledgers) -> {
             int spent = ledgers.stream().map(Ledger::getAmount).reduce(0, Integer::sum);
             int income = individualIncome.get(account);
             int balance = income - spent;
@@ -182,9 +182,12 @@ public class LedgerService {
                     budgetSubCategoryRepository
                             .findBudgetCategoryByCode(ledgerDTO.getSubCategory())
                             .orElseThrow(() -> new BadRequestException(ErrorCodes.BAD_DATA));
-            PaymentMode paidBy =
-                    paymentModeRepository.findPaymentModeByCode(ledgerDTO.getPaidBy())
-                            .orElseThrow(() -> new BadRequestException(ErrorCodes.BAD_DATA));
+            PaymentMode paidBy = null;
+            if(!ledgerDTO.getType().equals(BudgetTypes.INCOME)) {
+                paidBy =
+                        paymentModeRepository.findPaymentModeByCode(ledgerDTO.getPaidBy())
+                                .orElseThrow(() -> new BadRequestException(ErrorCodes.BAD_DATA));
+            }
             Ledger ledger = Ledger.builder()
                     .month(ledgerDTO.getMonth())
                     .year(ledgerDTO.getYear())
