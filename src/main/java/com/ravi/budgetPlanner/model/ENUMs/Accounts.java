@@ -6,8 +6,7 @@ import lombok.Getter;
 @Getter
 public enum Accounts {
     RAVI("Ravi"),
-    SHRI("Shri"),
-    OUTGOING("Outgoing");
+    SHRI("Shri"),;
 
     private String code;
 

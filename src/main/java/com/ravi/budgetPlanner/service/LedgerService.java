@@ -20,10 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.DateTimeException;
 import java.time.Month;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.groupingBy;
@@ -124,11 +121,14 @@ public class LedgerService {
         Map<String, List<Ledger>> incomeLedgers = allLedgers.stream().filter(ledger -> ledger.getType().getCode().equalsIgnoreCase(BudgetTypes.INCOME.getCode())).collect(Collectors.groupingBy(ledger -> ledger.getCategory().getCode()));
         incomeLedgers.forEach((category, ledgers) -> {
             int totalIncome = ledgers.stream().map(Ledger::getAmount).reduce(0, Integer::sum);
-            Accounts account = Accounts.RAVI;
-            if (category.equals("Shri's Salary")) {
-                account = Accounts.SHRI;
+            Accounts account = switch (category) {
+                case "Shri's Salary" -> Accounts.SHRI;
+                case "Ravi's Salary" -> Accounts.RAVI;
+                default -> null;
+            };
+            if (!Objects.isNull(account)) {
+                individualIncome.put(account, totalIncome);
             }
-            individualIncome.put(account, totalIncome);
         });
         nonIncomeIndividualLedgers.forEach((account, ledgers) -> {
             int spent = ledgers.stream().map(Ledger::getAmount).reduce(0, Integer::sum);
@@ -162,7 +162,7 @@ public class LedgerService {
                                         .category(ledger.getCategory().getCode())
                                         .subCategory(ledger.getSubCategory().getCode())
                                         .amount(ledger.getAmount())
-                                        .paidBy(ledger.getPaidBy().getCode())
+                                        .paidBy(Optional.ofNullable(ledger.getPaidBy()).orElse(PaymentMode.builder().build()).getCode())
                                         .build())
                 .toList();
     }
@@ -183,7 +183,7 @@ public class LedgerService {
                             .findBudgetCategoryByCode(ledgerDTO.getSubCategory())
                             .orElseThrow(() -> new BadRequestException(ErrorCodes.BAD_DATA));
             PaymentMode paidBy = null;
-            if(!ledgerDTO.getType().equals(BudgetTypes.INCOME)) {
+            if (!ledgerDTO.getType().equals(BudgetTypes.INCOME)) {
                 paidBy =
                         paymentModeRepository.findPaymentModeByCode(ledgerDTO.getPaidBy())
                                 .orElseThrow(() -> new BadRequestException(ErrorCodes.BAD_DATA));
