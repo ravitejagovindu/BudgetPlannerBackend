@@ -35,5 +35,6 @@ public class Ledger {
     @ManyToOne
     @JoinColumn(name = "payment_mode_id")
     private PaymentMode paidBy;
+    private String description;
 
 }

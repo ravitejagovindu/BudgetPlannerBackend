@@ -22,4 +22,5 @@ public class LedgerDTO {
     @Min(value = 1, message = "Invalid Amount")
     private int amount;
     private String paidBy;
+    private String description;
 }

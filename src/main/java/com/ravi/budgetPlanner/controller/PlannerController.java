@@ -1,6 +1,7 @@
 package com.ravi.budgetPlanner.controller;
 
 import com.ravi.budgetPlanner.model.PlannerDTO;
+import com.ravi.budgetPlanner.model.request.CategoryRequest;
 import com.ravi.budgetPlanner.model.response.ApiResponse;
 import com.ravi.budgetPlanner.model.response.ProjectionsResponseDTO;
 import com.ravi.budgetPlanner.service.PlannerService;
@@ -33,9 +34,16 @@ public class PlannerController {
         return new ResponseEntity<>(body, HttpStatus.CREATED);
     }
 
+    @PostMapping("/categories")
+    public ResponseEntity<ApiResponse<String>> createCategories(@RequestBody CategoryRequest newCategory){
+        plannerService.createCategories(newCategory);
+        ApiResponse<String> body = new ApiResponse<>("Success",null,"Created");
+        return new ResponseEntity<>(body, HttpStatus.CREATED);
+    }
+
     @PostMapping("/subcategories")
-    public ResponseEntity<ApiResponse<String>> createSubCategories(@RequestBody PlannerDTO planner){
-        plannerService.createSubCategories(planner);
+    public ResponseEntity<ApiResponse<String>> addSubCategories(@RequestBody CategoryRequest category){
+        plannerService.createSubCategories(category);
         ApiResponse<String> body = new ApiResponse<>("Success",null,"Created");
         return new ResponseEntity<>(body, HttpStatus.CREATED);
     }

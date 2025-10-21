@@ -7,15 +7,9 @@ import com.ravi.budgetPlanner.exception.DuplicateDataException;
 import com.ravi.budgetPlanner.model.ENUMs.BudgetTypes;
 import com.ravi.budgetPlanner.model.ENUMs.ErrorCodes;
 import com.ravi.budgetPlanner.model.PlannerDTO;
-import com.ravi.budgetPlanner.model.response.ProjectionsResponseDTO;
-import com.ravi.budgetPlanner.repository.BasePlannerRepository;
-import com.ravi.budgetPlanner.repository.BudgetCategoryRepository;
-import com.ravi.budgetPlanner.repository.BudgetTypeRepository;
-import com.ravi.budgetPlanner.repository.UpdatedPlannerRepository;
-import com.ravi.budgetPlanner.repository.entity.BasePlanner;
-import com.ravi.budgetPlanner.repository.entity.BudgetCategory;
-import com.ravi.budgetPlanner.repository.entity.BudgetType;
-import com.ravi.budgetPlanner.repository.entity.UpdatedPlanner;
+import com.ravi.budgetPlanner.model.request.CategoryRequest;
+import com.ravi.budgetPlanner.repository.*;
+import com.ravi.budgetPlanner.repository.entity.*;
 import com.ravi.budgetPlanner.util.ValidatorHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,10 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.Month;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -38,6 +29,7 @@ public class PlannerService {
     private final UpdatedPlannerRepository updatedPlannerRepository;
     private final BudgetTypeRepository budgetTypeRepository;
     private final BudgetCategoryRepository budgetCategoryRepository;
+    private final BudgetSubCategoryRepository budgetSubCategoryRepository;
     private final ValidatorHelper validator;
 
     public List<PlannerDTO> getBaseProjections(int year) {
@@ -195,19 +187,76 @@ public class PlannerService {
         return projectionsByType;
     }
 
-    public void createSubCategories(PlannerDTO planner) {
+    public void createSubCategories(CategoryRequest category) {
 
-        if (planner.getYear() > LocalDate.now().getYear() || planner.getYear() < LocalDate.now().getYear() - 1)
-            throw new BadRequestException(ErrorCodes.INVALID_YEAR);
+        BudgetType type = budgetTypeRepository
+                .findBudgetTypeByCode(category.getType().getCode())
+                .orElseThrow(() -> new BadRequestException(ErrorCodes.BAD_DATA));
 
-        BudgetType budgetType =
-                budgetTypeRepository
-                        .findBudgetTypeByCode(planner.getType().getCode())
-                        .orElseThrow(() -> new BadRequestException(ErrorCodes.BAD_DATA));
+        BudgetCategory dbCategory = budgetCategoryRepository
+                .findBudgetCategoryByCode(category.getCategory())
+                .orElseThrow(() -> new BadRequestException(ErrorCodes.BAD_DATA));
+        try {
+            List<BudgetSubCategories> dbSubCategories = new ArrayList<>();
+
+            category.getSubcategories().forEach(subCategory ->
+                    dbSubCategories.add(
+                            BudgetSubCategories
+                                    .builder()
+                                    .category(dbCategory)
+                                    .code(subCategory)
+                                    .name(subCategory)
+                                    .build()
+                    )
+            );
+
+            budgetSubCategoryRepository.saveAll(dbSubCategories);
+
+        } catch (Exception e) {
+            throw new BudgetException(ErrorCodes.INTERNAL.getMessage(), ErrorCodes.INTERNAL.getCode());
+        }
 
 
+    }
 
+    public void createCategories(CategoryRequest newCategory) {
+        String category = newCategory.getCategory();
+        List<String> subcategories = newCategory.getSubcategories();
 
+        if (category.isBlank() || subcategories.isEmpty()) {
+            throw new BadRequestException(ErrorCodes.BAD_DATA);
+        }
+
+        budgetCategoryRepository.findBudgetCategoryByCode(category).ifPresent(cat -> {
+            throw new BadRequestException(ErrorCodes.BAD_DATA);
+        });
+
+        BudgetType type = budgetTypeRepository.findBudgetTypeByCode(newCategory.getType().getCode()).orElseThrow(() -> new BadRequestException(ErrorCodes.BAD_DATA));
+        try {
+            BudgetCategory newDbCategory = budgetCategoryRepository.save(
+                    BudgetCategory
+                            .builder()
+                            .code(category)
+                            .name(category)
+                            .type(type)
+                            .build());
+            List<BudgetSubCategories> dbSubCategories = new ArrayList<>();
+
+            subcategories.forEach(subCategory ->
+                    dbSubCategories.add(
+                            BudgetSubCategories
+                                    .builder()
+                                    .category(newDbCategory)
+                                    .code(subCategory)
+                                    .name(subCategory)
+                                    .build()
+                    )
+            );
+
+            budgetSubCategoryRepository.saveAll(dbSubCategories);
+        } catch (Exception e) {
+            throw new BudgetException(ErrorCodes.INTERNAL.getMessage(), ErrorCodes.INTERNAL.getCode());
+        }
 
     }
 }

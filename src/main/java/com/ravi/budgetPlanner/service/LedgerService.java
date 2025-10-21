@@ -16,6 +16,7 @@ import com.ravi.budgetPlanner.repository.entity.*;
 import com.ravi.budgetPlanner.util.ValidatorHelper;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 
 import java.time.DateTimeException;
@@ -119,6 +120,7 @@ public class LedgerService {
         List<IndividualResponseDTO> individualBalances = new ArrayList<>();
         Map<Accounts, Integer> individualIncome = new HashMap<>();
         Map<String, List<Ledger>> incomeLedgers = allLedgers.stream().filter(ledger -> ledger.getType().getCode().equalsIgnoreCase(BudgetTypes.INCOME.getCode())).collect(Collectors.groupingBy(ledger -> ledger.getCategory().getCode()));
+        Map<Pair<String, String>, List<Ledger>> incomeLedgersByPair = allLedgers.stream().filter(ledger -> ledger.getType().getCode().equalsIgnoreCase(BudgetTypes.INCOME.getCode())).collect(Collectors.groupingBy(ledger -> Pair.of(ledger.getCategory().getCode(), ledger.getSubCategory().getCode())));
         incomeLedgers.forEach((category, ledgers) -> {
             int totalIncome = ledgers.stream().map(Ledger::getAmount).reduce(0, Integer::sum);
             Accounts account = switch (category) {
@@ -128,6 +130,17 @@ public class LedgerService {
             };
             if (!Objects.isNull(account)) {
                 individualIncome.put(account, totalIncome);
+            }
+        });
+        incomeLedgers.getOrDefault("Other Sources", new ArrayList<>()).forEach(ledger -> {
+            Accounts account = switch (ledger.getSubCategory().getCode()) {
+                case "Shri" -> Accounts.SHRI;
+                case "Ravi" -> Accounts.RAVI;
+                default -> null;
+            };
+            if (!Objects.isNull(account)) {
+                int income = ledger.getAmount() + individualIncome.get(account);
+                individualIncome.put(account, income);
             }
         });
         nonIncomeIndividualLedgers.forEach((account, ledgers) -> {
@@ -156,6 +169,7 @@ public class LedgerService {
                                         .builder()
                                         .id(ledger.getId())
                                         .month(ledger.getMonth())
+                                        .description(ledger.getDescription())
                                         .year(ledger.getYear())
                                         .date(ledger.getDate())
                                         .type(BudgetTypes.fromString(ledger.getType().getCode()))
